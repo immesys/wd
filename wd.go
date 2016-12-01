@@ -60,7 +60,6 @@ func Kick(name string, seconds int) error {
 	copy(body, token)
 	copy(body[32:], []byte(name))
 	hmac := sha256.Sum256(body)
-	fmt.Printf("body is '%s' and hmac is %064x\n", hmac)
 	for _, endpoint := range endpoints {
 		timeout := time.Duration(5 * time.Second)
 		client := http.Client{

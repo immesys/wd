@@ -3,6 +3,22 @@
 
 The concept of global watchdogs are simple. It is a collection of timers, that must be reset periodically, and if they timeout, it is considered a fault. You can also fault them early or retire them. To keep things secure, yet simple, you require a token to interact with watchdogs with a given prefix.
 
+# Downloading
+
+To get the command line tool, go to [https://github.com/immesys/wd/releases](the releases page).
+
+To get the go library, do
+
+```bash
+go get github.com/immesys/wd
+```
+
+To get the python library, do
+
+```bash
+pip install gwd
+```
+
 # Names
 
 Watchdog names must consist of lowercase letters and numbers. You are allowed underscores (`_`) and periods (`.`). Note that in some visualization and alerting tools, periods will be treated as group delimiters, for example these watchdogs
