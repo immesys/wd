@@ -188,3 +188,25 @@ Thu, 01 Dec 2016 10:33:24 -0800
 
 You can also add some color to the output with `--color` (failed watchdogs will be red), and you can reorder it so that failed watchdogs are listed
 first (useful if you have lots of them) with `--badfirst`.
+
+# REST interface
+
+If you need support in languages other than bash, python and go, it is very easy to interact with the REST interface. There are three endpoints, and for availability you should attempt to communicate with all three before failing. The endpoints are geographically distributed, so should not all fail at the same time.
+
+```
+https://wd-a.steelcode.com
+https://wd-b.steelcode.com
+https://wd-c.steelcode.com
+```
+
+The URL patterns are:
+
+```
+GET /auth/{prefix}?hmac={hmac}
+GET /kick/{name}?timeout={seconds}&hmac={hmac}
+GET /fault/{name}?reason={reason}&hmac={hmac}
+GET /status/{prefix}?hmac={hmac}&header={0/1}
+GET /retire/{prefix}?hmac={hmac}
+```
+
+The only difficult part is calculating the hmac token, which is calculated as the sha-256 of the authentication token (in binary, 32 bytes) with the prefix or name  appended onto it.
