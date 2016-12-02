@@ -15,7 +15,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "wd"
 	app.Usage = "control watchdogs"
-	app.Version = "1.1.0"
+	app.Version = "1.2.0"
 	app.Commands = []cli.Command{
 		{
 			Name:      "kick",
@@ -166,6 +166,8 @@ func actionStatus(c *cli.Context) error {
 		if color {
 			if s.Status != "KGOOD" {
 				fmt.Print(ansi.ColorCode("red+b"))
+			} else {
+				fmt.Print(ansi.ColorCode("green+b"))
 			}
 		}
 		fmt.Printf(fline, s.Status, s.Name, s.Expires, strings.TrimSpace(s.Reason))

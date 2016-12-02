@@ -1,0 +1,9 @@
+[Unit]
+Description=ZFS health watchdog
+
+[Timer]
+OnCalendar=*:0/5
+Persistent=true
+
+[Install]
+WantedBy=timers.target

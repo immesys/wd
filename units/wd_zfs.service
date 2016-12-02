@@ -1,0 +1,9 @@
+[Unit]
+Description=WatchDog ZFS
+Documentation=https://github.com/immesys/wd/wdtop
+
+[Service]
+Type=oneshot
+Environment=WD_TOKEN=e4f70525142d03b4811a53644257351630b59fa6f6348dae612ab463aa9617a0
+Environment=PREFIX=410.server.foundry
+ExecStart=/usr/bin/wd_check_zfs.sh

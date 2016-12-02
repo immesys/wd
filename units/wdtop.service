@@ -1,0 +1,21 @@
+[Unit]
+Description=WatchDog top
+Documentation=https://github.com/immesys/wd/wdtop
+
+[Service]
+Environment=WD_TOKEN=<your token>
+ExecStart=/usr/bin/wdtop \
+  --prefix "my.watchdog.prefix" \
+  --min-mem-mb 1000 \
+  --max-cpu-percent 50 \
+  --df /:root:2000 \
+  --df /home:home:2000 \
+  --interval 2m \
+  --proc btrdb \
+  --proc spawnd
+
+Restart=always
+RestartSec=2s
+
+[Install]
+WantedBy=multi-user.target
