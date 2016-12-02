@@ -1,0 +1,18 @@
+[Unit]
+Description=WatchDog SystemD monitor
+Documentation=https://github.com/immesys/wd/sdmon
+
+[Service]
+Environment=WD_TOKEN=<your token here>
+ExecStart=/usr/bin/sdmon \
+  --prefix "my.watchdog.prefix" \
+  --holdoff 30m \
+  --interval 3m \
+  --unit servicename:displayname \
+  --unit serv_n_displayname
+
+Restart=always
+RestartSec=2s
+
+[Install]
+WantedBy=multi-user.target
