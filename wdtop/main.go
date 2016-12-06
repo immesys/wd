@@ -23,9 +23,6 @@ func main() {
 	app.Usage = "Maintain top watchdogs"
 	app.Version = "1.3.0"
 	app.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name: "prefix",
-		},
 		cli.Float64Flag{
 			Name:  "min-mem-mb",
 			Value: 1000.0,
@@ -51,20 +48,20 @@ func main() {
 }
 
 func runApp(c *cli.Context) error {
-	prefix := c.String("prefix")
-	if prefix == "" {
-		fmt.Println("You need to specify --prefix")
-		os.Exit(1)
-	}
-	if !strings.HasSuffix(prefix, ".") {
-		prefix += "."
-	}
+	prefix := os.Getenv("POP_ID")
+	prefix = strings.Replace(prefix, "-", "_", -1)
+	prefix = strings.ToLower(prefix)
+	prefix = "410.br." + prefix + "."
 	timeout = int((c.Duration("interval") / time.Second)) * 2
+	i := 0
 	for {
 		doMemory(prefix, c.Float64("min-mem-mb"))
-		doCPU(prefix, c.Float64("max-cpu-percent"))
 		doDisk(prefix, c.StringSlice("df"))
 		doProc(prefix, c.StringSlice("proc"))
+		if i%2 == 0 {
+			doCPU(prefix, c.Float64("max-cpu-percent"), timeout*2)
+		}
+		i++
 		time.Sleep(c.Duration("interval"))
 	}
 }
@@ -82,7 +79,7 @@ func doMemory(prefix string, minMB float64) {
 	}
 }
 
-func doCPU(prefix string, maxPercent float64) {
+func doCPU(prefix string, maxPercent float64, timeout int) {
 	t, err := cpu.Percent(0, false)
 	if err != nil {
 		panic(err)

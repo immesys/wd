@@ -19,9 +19,6 @@ func main() {
 	app.Usage = "Maintain systemd watchdogs"
 	app.Version = "1.3.0"
 	app.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name: "prefix",
-		},
 		cli.DurationFlag{
 			Name:  "interval",
 			Value: 2 * time.Minute,
@@ -123,14 +120,10 @@ func runApp(c *cli.Context) error {
 		displayName: make(map[string]string),
 		lastAction:  make(map[string]Action),
 	}
-	e.prefix = c.String("prefix")
-	if e.prefix == "" {
-		fmt.Println("You need to specify --prefix")
-		os.Exit(1)
-	}
-	if !strings.HasSuffix(e.prefix, ".") {
-		e.prefix += "."
-	}
+	e.prefix = os.Getenv("POP_ID")
+	e.prefix = strings.Replace(e.prefix, "-", "_", -1)
+	e.prefix = strings.ToLower(e.prefix)
+	e.prefix = "410.br." + e.prefix + "."
 	e.interval = c.Duration("interval")
 	e.timeout = int((c.Duration("interval") / time.Second)) * 2
 	e.healthyInterval = c.Duration("holdoff")
@@ -147,13 +140,8 @@ func runApp(c *cli.Context) error {
 	if err != nil {
 		panic(err)
 	}
-	err = e.conn.Subscribe()
-	if err != nil {
-		panic(err)
-	}
-
 	for {
 		e.Scan()
-		time.Sleep(2 * time.Second)
+		time.Sleep(e.interval)
 	}
 }
