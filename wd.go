@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -22,7 +23,20 @@ var endpoints = []string{"https://wd-a.steelcode.com",
 var authtoken string
 var pat = regexp.MustCompile("^[a-z0-9\\._]+$")
 
+type atype struct {
+	isKick bool
+	when   time.Time
+}
+
+func (a *atype) OlderThan(d time.Duration) bool {
+	return time.Now().Sub(a.when) > d
+}
+
+var rlmap map[string]atype
+var rlLock sync.Mutex
+
 func init() {
+	rlmap = make(map[string]atype)
 	authtoken = os.Getenv("WD_TOKEN")
 	if authtoken != "" {
 		authtoken = authtoken[:64]
@@ -114,6 +128,32 @@ func Fault(name string, reason string) error {
 		}
 	}
 	return fmt.Errorf("No endpoints reachable")
+}
+
+// RLFault is like Fault but it will only send 1 fault per interval
+func RLFault(interval time.Duration, name string, reason string) {
+	rlLock.Lock()
+	prev, ok := rlmap[name]
+	if ok && !prev.isKick && !prev.OlderThan(interval) {
+		rlLock.Unlock()
+		return
+	}
+	rlmap[name] = atype{isKick: false, when: time.Now()}
+	rlLock.Unlock()
+	Fault(name, reason)
+}
+
+// RLKick is like Kick but it will only send 1 kick per interval
+func RLKick(interval time.Duration, name string, timeout int) {
+	rlLock.Lock()
+	prev, ok := rlmap[name]
+	if ok && prev.isKick && !prev.OlderThan(interval) {
+		rlLock.Unlock()
+		return
+	}
+	rlmap[name] = atype{isKick: true, when: time.Now()}
+	rlLock.Unlock()
+	Kick(name, timeout)
 }
 func Auth(prefix string) (string, error) {
 	if !ValidPrefix(prefix) {

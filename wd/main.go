@@ -89,7 +89,11 @@ func actionKick(c *cli.Context) error {
 			os.Exit(1)
 		}
 	}
-	wd.Kick(c.Args()[0], int(timeout))
+	err := wd.Kick(c.Args()[0], int(timeout))
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 	return nil
 }
 func actionClear(c *cli.Context) error {
