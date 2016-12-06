@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
@@ -17,11 +18,13 @@ import (
 	"time"
 )
 
-var endpoints = []string{"https://wd-a.steelcode.com",
+var _endpoints = []string{"https://wd-a.steelcode.com",
 	"https://wd-b.steelcode.com",
 	"https://wd-c.steelcode.com"}
 var authtoken string
 var pat = regexp.MustCompile("^[a-z0-9\\._]+$")
+
+const ReqTimeout = 5 * time.Second
 
 type atype struct {
 	isKick bool
@@ -35,6 +38,15 @@ func (a *atype) OlderThan(d time.Duration) bool {
 var rlmap map[string]atype
 var rlLock sync.Mutex
 
+func getEndpoints() []string {
+	rand.Seed(time.Now().UnixNano())
+	idz := rand.Perm(len(_endpoints))
+	rv := make([]string, len(_endpoints))
+	for frm, to := range idz {
+		rv[frm] = _endpoints[to]
+	}
+	return rv
+}
 func init() {
 	rlmap = make(map[string]atype)
 	authtoken = os.Getenv("WD_TOKEN")
@@ -75,8 +87,8 @@ func Kick(name string, seconds int) error {
 	copy(body, token)
 	copy(body[32:], []byte(name))
 	hmac := sha256.Sum256(body)
-	for _, endpoint := range endpoints {
-		timeout := time.Duration(5 * time.Second)
+	for _, endpoint := range getEndpoints() {
+		timeout := time.Duration(ReqTimeout)
 		client := http.Client{
 			Timeout: timeout,
 		}
@@ -108,8 +120,8 @@ func Fault(name string, reason string) error {
 	copy(body, token)
 	copy(body[32:], []byte(name))
 	hmac := sha256.Sum256(body)
-	for _, endpoint := range endpoints {
-		timeout := time.Duration(5 * time.Second)
+	for _, endpoint := range getEndpoints() {
+		timeout := time.Duration(ReqTimeout)
 		client := http.Client{
 			Timeout: timeout,
 		}
@@ -167,8 +179,8 @@ func Auth(prefix string) (string, error) {
 	copy(body, token)
 	copy(body[32:], []byte(prefix))
 	hmac := sha256.Sum256(body)
-	for _, endpoint := range endpoints {
-		timeout := time.Duration(5 * time.Second)
+	for _, endpoint := range getEndpoints() {
+		timeout := time.Duration(ReqTimeout)
 		client := http.Client{
 			Timeout: timeout,
 		}
@@ -209,8 +221,11 @@ func Status(prefix string) ([]WDStatus, error) {
 	copy(body, token)
 	copy(body[32:], []byte(prefix))
 	hmac := sha256.Sum256(body)
-	for _, endpoint := range endpoints {
-		timeout := time.Duration(5 * time.Second)
+	for _, endpoint := range getEndpoints() {
+		if os.Getenv("WD_DEBUG_ENDPOINT") != "" {
+			fmt.Printf("Trying endpoint %s\n", endpoint)
+		}
+		timeout := time.Duration(ReqTimeout)
 		client := http.Client{
 			Timeout: timeout,
 		}
@@ -252,8 +267,8 @@ func Retire(prefix string) error {
 	copy(body, token)
 	copy(body[32:], []byte(prefix))
 	hmac := sha256.Sum256(body)
-	for _, endpoint := range endpoints {
-		timeout := time.Duration(5 * time.Second)
+	for _, endpoint := range getEndpoints() {
+		timeout := time.Duration(ReqTimeout)
 		client := http.Client{
 			Timeout: timeout,
 		}
@@ -285,8 +300,8 @@ func Clear(prefix string) error {
 	copy(body, token)
 	copy(body[32:], []byte(prefix))
 	hmac := sha256.Sum256(body)
-	for _, endpoint := range endpoints {
-		timeout := time.Duration(5 * time.Second)
+	for _, endpoint := range getEndpoints() {
+		timeout := time.Duration(ReqTimeout)
 		client := http.Client{
 			Timeout: timeout,
 		}
