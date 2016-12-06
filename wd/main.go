@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/immesys/wd"
 	"github.com/mgutz/ansi"
@@ -15,7 +16,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "wd"
 	app.Usage = "control watchdogs"
-	app.Version = "1.2.0"
+	app.Version = "1.3.0"
 	app.Commands = []cli.Command{
 		{
 			Name:      "kick",
@@ -42,6 +43,12 @@ func main() {
 			ArgsUsage: "prefix",
 		},
 		{
+			Name:      "clear",
+			Usage:     "clear the cumulative downtime on a prefix",
+			Action:    cli.ActionFunc(actionClear),
+			ArgsUsage: "prefix",
+		},
+		{
 			Name:      "status",
 			Usage:     "list watchdog status",
 			Action:    cli.ActionFunc(actionStatus),
@@ -51,13 +58,13 @@ func main() {
 					Name: "noheader",
 				},
 				cli.BoolFlag{
-					Name: "color",
+					Name: "nocolor",
 				},
 				cli.BoolFlag{
 					Name: "tabsep",
 				},
 				cli.BoolFlag{
-					Name: "badfirst",
+					Name: "nobadfirst",
 				},
 			},
 		}}
@@ -83,6 +90,18 @@ func actionKick(c *cli.Context) error {
 		}
 	}
 	wd.Kick(c.Args()[0], int(timeout))
+	return nil
+}
+func actionClear(c *cli.Context) error {
+	if len(c.Args()) < 1 || len(c.Args()) > 2 {
+		fmt.Println("Usage: wd clear prefix")
+		os.Exit(1)
+	}
+	if !wd.ValidPrefix(c.Args()[0]) {
+		fmt.Println("watchdog names must match [a-z0-9\\._]")
+		os.Exit(1)
+	}
+	wd.Clear(c.Args()[0])
 	return nil
 }
 func actionRetire(c *cli.Context) error {
@@ -150,17 +169,17 @@ func actionStatus(c *cli.Context) error {
 		}
 	}
 	var fline string
-	color := c.Bool("color")
+	color := !c.Bool("nocolor")
 	noheader := c.Bool("noheader")
 	if c.Bool("tabsep") {
 		color = false
 		noheader = true
-		fline = "%s\t%s\t%s\t%s\n"
+		fline = "%s\t%s\t%s\t%s\t%s\n"
 	} else {
-		fline = "%4s %-" + strconv.Itoa(namemax) + "s %-32s %s\n"
+		fline = "%4s %-" + strconv.Itoa(namemax) + "s %-32s %-8s %s\n"
 	}
 	if !noheader {
-		fmt.Printf(fline, "STATE", "NAME", "EXPIRE", "REASON")
+		fmt.Printf(fline, "STATE", "NAME", "EXPIRE", "CUMD", "REASON")
 	}
 	do := func(s wd.WDStatus) {
 		if color {
@@ -170,12 +189,13 @@ func actionStatus(c *cli.Context) error {
 				fmt.Print(ansi.ColorCode("green+b"))
 			}
 		}
-		fmt.Printf(fline, s.Status, s.Name, s.Expires, strings.TrimSpace(s.Reason))
+		s.CumDTime -= time.Duration(int64(s.CumDTime) % 1000000000)
+		fmt.Printf(fline, s.Status, s.Name, s.Expires, s.CumDTime, strings.TrimSpace(s.Reason))
 		if color {
 			fmt.Print(ansi.Reset)
 		}
 	}
-	if c.Bool("badfirst") {
+	if !c.Bool("nobadfirst") {
 		for _, s := range st {
 			if s.Status != "KGOOD" {
 				do(s)

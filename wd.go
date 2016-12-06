@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -149,10 +150,11 @@ func Auth(prefix string) (string, error) {
 }
 
 type WDStatus struct {
-	Status  string
-	Expires string
-	Name    string
-	Reason  string
+	Status   string
+	Expires  string
+	Name     string
+	Reason   string
+	CumDTime time.Duration
 }
 
 func Status(prefix string) ([]WDStatus, error) {
@@ -187,7 +189,8 @@ func Status(prefix string) ([]WDStatus, error) {
 			l, err := reader.ReadString('\n')
 			for err == nil {
 				parts := strings.Split(l, "\t")
-				st := WDStatus{Status: parts[0], Expires: parts[1], Name: parts[2], Reason: parts[3]}
+				cumd, _ := strconv.ParseInt(parts[3], 10, 64)
+				st := WDStatus{Status: parts[0], Expires: parts[1], Name: parts[2], Reason: parts[4], CumDTime: time.Duration(cumd) * time.Millisecond}
 				rv = append(rv, st)
 				l, err = reader.ReadString('\n')
 			}
@@ -215,6 +218,39 @@ func Retire(prefix string) error {
 			Timeout: timeout,
 		}
 		resp, err := client.Get(fmt.Sprintf("%s/retire/%s?hmac=%064x", endpoint, prefix, hmac))
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "WD endpoint %s error: %s\n", endpoint, err.Error())
+			continue
+		} else {
+			contents, _ := ioutil.ReadAll(resp.Body)
+			resp.Body.Close()
+			if resp.StatusCode == 200 {
+				return nil
+			} else {
+				return errors.New(string(contents))
+			}
+		}
+	}
+	return errors.New("no endpoints reachable")
+}
+func Clear(prefix string) error {
+	if !ValidPrefix(prefix) {
+		panic("Watchdog clear with invalid prefix: " + prefix)
+	}
+	token, err := hex.DecodeString(authtoken)
+	if err != nil {
+		panic("Watchdog invalid token: " + err.Error())
+	}
+	body := make([]byte, 32+len(prefix))
+	copy(body, token)
+	copy(body[32:], []byte(prefix))
+	hmac := sha256.Sum256(body)
+	for _, endpoint := range endpoints {
+		timeout := time.Duration(5 * time.Second)
+		client := http.Client{
+			Timeout: timeout,
+		}
+		resp, err := client.Get(fmt.Sprintf("%s/clear/%s?hmac=%064x", endpoint, prefix, hmac))
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "WD endpoint %s error: %s\n", endpoint, err.Error())
 			continue
