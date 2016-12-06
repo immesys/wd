@@ -24,7 +24,7 @@ var _endpoints = []string{"https://wd-a.steelcode.com",
 var authtoken string
 var pat = regexp.MustCompile("^[a-z0-9\\._]+$")
 
-const ReqTimeout = 3 * time.Second
+const ReqTimeout = 5 * time.Second
 
 type atype struct {
 	isKick bool
