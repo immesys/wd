@@ -182,6 +182,8 @@ The second has been deliberately faulted, as indicated by the FAULT state, and a
 
 The Go and Python bindings have the same names for the fields, with the same meaning.
 
+Note that this output is a little out of date, the current output has an additional field "CUMD" which is the cumulative downtime. 
+
 # Tips and tricks
 
 The command line tool has some additional features to make it easier to use in scripts. If you want to parse the output, it is useful to
