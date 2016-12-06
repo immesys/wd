@@ -39,6 +39,7 @@ var rlmap map[string]atype
 var rlLock sync.Mutex
 
 func getEndpoints() []string {
+	rand.Seed(time.Now().UnixNano())
 	idz := rand.Perm(len(_endpoints))
 	rv := make([]string, len(_endpoints))
 	for frm, to := range idz {
@@ -221,6 +222,9 @@ func Status(prefix string) ([]WDStatus, error) {
 	copy(body[32:], []byte(prefix))
 	hmac := sha256.Sum256(body)
 	for _, endpoint := range getEndpoints() {
+		if os.Getenv("WD_DEBUG_ENDPOINT") != "" {
+			fmt.Printf("Trying endpoint %s\n", endpoint)
+		}
 		timeout := time.Duration(ReqTimeout)
 		client := http.Client{
 			Timeout: timeout,
