@@ -79,7 +79,7 @@ func doMemory(prefix string, minMB float64) {
 	}
 }
 
-func doCPU(prefix string, maxPercent float64, timeout int) {
+func doCPU(prefix string, maxPercent float64, tmt int) {
 	t, err := cpu.Percent(0, false)
 	if err != nil {
 		panic(err)
@@ -90,7 +90,7 @@ func doCPU(prefix string, maxPercent float64, timeout int) {
 	}
 	sum /= float64(len(t))
 	if sum < maxPercent {
-		wd.Kick(prefix+"cpu", timeout)
+		wd.Kick(prefix+"cpu", tmt)
 	} else {
 		wd.Fault(prefix+"cpu", fmt.Sprintf("%.2f %% CPU usage", sum))
 	}
