@@ -321,3 +321,55 @@ func Clear(prefix string) error {
 	}
 	return errors.New("no endpoints reachable")
 }
+func Monitor(prefix string, monitorType int, args string) (string, error) {
+	if !ValidPrefix(prefix) {
+		panic("Watchdog monitor with invalid prefix: " + prefix)
+	}
+	token, err := hex.DecodeString(authtoken)
+	if err != nil {
+		panic("Watchdog invalid token: " + err.Error())
+	}
+	body := make([]byte, 32+len(prefix))
+	copy(body, token)
+	copy(body[32:], []byte(prefix))
+	hmac := sha256.Sum256(body)
+	for _, endpoint := range getEndpoints() {
+		timeout := time.Duration(ReqTimeout)
+		client := http.Client{
+			Timeout: timeout,
+		}
+		resp, err := client.Get(fmt.Sprintf("%s/monitor/%d/%s?hmac=%064x&args=%s", endpoint, monitorType, prefix, hmac, url.QueryEscape(args)))
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "WD endpoint %s error: %s\n", endpoint, err.Error())
+			continue
+		}
+		contents, _ := ioutil.ReadAll(resp.Body)
+		resp.Body.Close()
+		if resp.StatusCode == 200 {
+			return string(contents), nil
+		}
+		return "", errors.New(string(contents))
+	}
+	return "", errors.New("no endpoints reachable")
+}
+
+func DeleteMonitor(id string) error {
+	for _, endpoint := range getEndpoints() {
+		timeout := time.Duration(ReqTimeout)
+		client := http.Client{
+			Timeout: timeout,
+		}
+		resp, err := client.Get(fmt.Sprintf("%s/delmonitor/%s", endpoint, id))
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "WD endpoint %s error: %s\n", endpoint, err.Error())
+			continue
+		}
+		contents, _ := ioutil.ReadAll(resp.Body)
+		resp.Body.Close()
+		if resp.StatusCode == 200 {
+			return nil
+		}
+		return errors.New(string(contents))
+	}
+	return errors.New("no endpoints reachable")
+}
