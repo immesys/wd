@@ -145,6 +145,36 @@ import "github.com/immesys/wd"
    wd.Retire("my.new.")
 ```
 
+# Monitoring
+
+You can send changes in watchdog status to a slack integration by using the *monitor* command. First get a slack integration URL which looks a bit like https://hooks.slack.com/services/AAAAAAAAA/BBBBBBBBBBBB/CCCCCCCCCCCCCCCCCCCC and then do
+
+```bash
+#bash
+wd monitor slack my/prefix "https://hooks.slack.com/..."
+```
+
+```go
+//go
+import "github.com/immesys/wd"
+...
+   id, _ := wd.Monitor("my/prefix", wd.MonitorSlack, "https://hooks.slack.com/...")
+```
+
+This will print out the ID of your monitor. Save this ID because you will need it if you want to delete the monitor later:
+
+```bash
+#bash
+wd delmonitor theid
+```
+
+```go
+//go
+import "github.com/immesys/wd"
+...
+   wd.DelMonitor("theid")
+```
+
 # Status
 
 To see what's broken, you can get the *status* of all watchdogs with a given prefix
