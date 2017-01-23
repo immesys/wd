@@ -24,6 +24,7 @@ var _endpoints = []string{"https://wd-a.steelcode.com",
 var authtoken string
 var pat = regexp.MustCompile("^[a-z0-9\\._]+$")
 
+const MonitorSlack = 1
 const ReqTimeout = 5 * time.Second
 
 type atype struct {
