@@ -17,7 +17,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "sdmon"
 	app.Usage = "Maintain systemd watchdogs"
-	app.Version = "1.3.0"
+	app.Version = "1.6.0"
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name: "prefix",
