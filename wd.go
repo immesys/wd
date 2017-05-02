@@ -143,30 +143,34 @@ func Fault(name string, reason string) error {
 	return fmt.Errorf("No endpoints reachable")
 }
 
-// RLFault is like Fault but it will only send 1 fault per interval
-func RLFault(interval time.Duration, name string, reason string) {
+// RLFault is like Fault but it will only send 1 fault per interval. Returns
+// true if an actual fault was done, false otherwise
+func RLFault(interval time.Duration, name string, reason string) bool {
 	rlLock.Lock()
 	prev, ok := rlmap[name]
 	if ok && !prev.isKick && !prev.OlderThan(interval) {
 		rlLock.Unlock()
-		return
+		return false
 	}
 	rlmap[name] = atype{isKick: false, when: time.Now()}
 	rlLock.Unlock()
 	Fault(name, reason)
+	return true
 }
 
-// RLKick is like Kick but it will only send 1 kick per interval
-func RLKick(interval time.Duration, name string, timeout int) {
+// RLKick is like Kick but it will only send 1 kick per interval. Returns
+// true if an actual kick was done, false otherwise
+func RLKick(interval time.Duration, name string, timeout int) bool {
 	rlLock.Lock()
 	prev, ok := rlmap[name]
 	if ok && prev.isKick && !prev.OlderThan(interval) {
 		rlLock.Unlock()
-		return
+		return false
 	}
 	rlmap[name] = atype{isKick: true, when: time.Now()}
 	rlLock.Unlock()
 	Kick(name, timeout)
+	return true
 }
 func Auth(prefix string) (string, error) {
 	if !ValidPrefix(prefix) {
