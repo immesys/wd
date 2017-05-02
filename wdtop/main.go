@@ -21,7 +21,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "wdtop"
 	app.Usage = "Maintain top watchdogs"
-	app.Version = "1.4.0"
+	app.Version = "1.6.0"
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name: "prefix",

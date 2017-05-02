@@ -16,7 +16,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "wd"
 	app.Usage = "control watchdogs"
-	app.Version = "1.5.0"
+	app.Version = "1.6.0"
 	app.Commands = []cli.Command{
 		{
 			Name:      "kick",
