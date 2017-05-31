@@ -120,7 +120,11 @@ func runApp(c *cli.Context) error {
 		displayName: make(map[string]string),
 		lastAction:  make(map[string]Action),
 	}
-	e.prefix = os.Getenv("POP_ID")
+	hn, err := os.Hostname()
+	if err != nil {
+		panic(err)
+	}
+	e.prefix = hn
 	e.prefix = strings.Replace(e.prefix, "-", "_", -1)
 	e.prefix = strings.ToLower(e.prefix)
 	e.prefix = "410.br." + e.prefix + "."
@@ -135,7 +139,6 @@ func runApp(c *cli.Context) error {
 			e.displayName[parts[0]+".service"] = parts[1]
 		}
 	}
-	var err error
 	e.conn, err = dbus.NewSystemConnection()
 	if err != nil {
 		panic(err)

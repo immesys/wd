@@ -48,7 +48,11 @@ func main() {
 }
 
 func runApp(c *cli.Context) error {
-	prefix := os.Getenv("POP_ID")
+	hn, err := os.Hostname()
+	if err != nil {
+		panic(err)
+	}
+	prefix := hn
 	prefix = strings.Replace(prefix, "-", "_", -1)
 	prefix = strings.ToLower(prefix)
 	prefix = "410.br." + prefix + "."
