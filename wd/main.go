@@ -16,7 +16,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "wd"
 	app.Usage = "control watchdogs"
-	app.Version = "1.3.0"
+	app.Version = "1.6.0"
 	app.Commands = []cli.Command{
 		{
 			Name:      "kick",
@@ -67,7 +67,20 @@ func main() {
 					Name: "nobadfirst",
 				},
 			},
-		}}
+		},
+		{
+			Name:      "monitor",
+			Usage:     "create a monitor",
+			Action:    cli.ActionFunc(actionMonitor),
+			ArgsUsage: "<type> <prefix> <arguments>",
+		},
+		{
+			Name:      "delmonitor",
+			Usage:     "delete a monitor",
+			Action:    cli.ActionFunc(actionDelMonitor),
+			ArgsUsage: "<id>",
+		},
+	}
 	app.Run(os.Args)
 }
 
@@ -216,5 +229,42 @@ func actionStatus(c *cli.Context) error {
 		}
 	}
 
+	return nil
+}
+
+func actionMonitor(c *cli.Context) error {
+	//monitor <type> <prefix> <args>
+	if len(c.Args()) != 3 {
+		fmt.Println("Usage: wd monitor slack <prefix> <slack URI>")
+		os.Exit(1)
+	}
+	if !wd.ValidPrefix(c.Args()[1]) {
+		fmt.Println("watchdog prefixes must match [a-z0-9\\._]")
+		os.Exit(1)
+	}
+	if c.Args()[0] != "slack" {
+		fmt.Println("Only slack monitoring is supported in this version of wd")
+		os.Exit(1)
+	}
+	id, err := wd.Monitor(c.Args()[1], 1, c.Args()[2])
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %s\n", err.Error())
+		os.Exit(1)
+	}
+	fmt.Println(id)
+	return nil
+}
+
+func actionDelMonitor(c *cli.Context) error {
+	//delmonitor id
+	if len(c.Args()) != 1 {
+		fmt.Println("Usage: wd delmonitor <id>")
+		os.Exit(1)
+	}
+	err := wd.DeleteMonitor(c.Args()[0])
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %s\n", err.Error())
+		os.Exit(1)
+	}
 	return nil
 }

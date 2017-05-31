@@ -17,7 +17,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "sdmon"
 	app.Usage = "Maintain systemd watchdogs"
-	app.Version = "1.3.0"
+	app.Version = "1.6.0"
 	app.Flags = []cli.Flag{
 		cli.DurationFlag{
 			Name:  "interval",
@@ -129,7 +129,7 @@ func runApp(c *cli.Context) error {
 	e.healthyInterval = c.Duration("holdoff")
 	for _, u := range c.StringSlice("unit") {
 		parts := strings.Split(u, ":")
-		if len(parts) == 0 {
+		if len(parts) == 1 {
 			e.displayName[parts[0]+".service"] = parts[0]
 		} else {
 			e.displayName[parts[0]+".service"] = parts[1]
